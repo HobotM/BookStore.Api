@@ -1,41 +1,70 @@
+using BookStore.Api.Service;
+using Serilog;
+using Swashbuckle;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File(
+        "logs/bookstore-.txt",
+        rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+builder.Services.AddSingleton<BookService>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseSerilogRequestLogging();
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-var summaries = new[]
+app.MapGet("/books", (BookService bookService) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    var books = bookService.GetAll();
 
-app.MapGet("/weatherforecast", () =>
+    return Results.Ok(books);
+});
+
+app.MapGet("/books/{id:int}", (int id, BookService bookService) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    var book = bookService.GetById(id);
+
+    return book is null
+        ? Results.NotFound()
+        : Results.Ok(book);
+});
+
+app.MapPost("/books", (CreateBookRequest request, BookService bookService) =>
+{
+    var book = bookService.Create(
+        request.Title,
+        request.Author,
+        request.Price);
+
+    return Results.Created($"/books/{book.Id}", book);
+});
+
+app.MapGet("/simulate-error", (BookService bookService) =>
+{
+    bookService.SimulateError();
+
+    return Results.Ok();
+});
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+public sealed record CreateBookRequest(
+    string Title,
+    string Author,
+    decimal Price);
