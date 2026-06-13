@@ -1,6 +1,7 @@
-using BookStore.Api.Service;
+using BookStore.Api.Services;
 using Serilog;
 using Swashbuckle;
+using BookStore.Api.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 builder.Services.AddSingleton<BookService>();
+builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
