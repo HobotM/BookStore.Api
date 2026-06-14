@@ -31,7 +31,12 @@ public sealed class BookService
 
         if (book is null)
         {
-            _logger.LogWarning("Book with id {BookId} was not found", id);
+            _logger.LogWarning(
+                "Book with id {BookId} was not found",
+                id);
+
+            throw new KeyNotFoundException(
+                $"Book with id {id} was not found.");
         }
 
         return book;

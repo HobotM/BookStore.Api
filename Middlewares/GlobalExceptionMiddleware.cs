@@ -8,13 +8,13 @@ public sealed class GlobalExceptionMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-      public GlobalExceptionMiddleware(
-        RequestDelegate next,
-        ILogger<GlobalExceptionMiddleware> logger)
-    {
-        _next = next;
-        _logger = logger;
-    }
+    public GlobalExceptionMiddleware(
+    RequestDelegate next,
+    ILogger<GlobalExceptionMiddleware> logger)
+        {
+            _next = next;
+            _logger = logger;
+        }
 
      public async Task InvokeAsync(HttpContext context)
     {
@@ -26,12 +26,20 @@ public sealed class GlobalExceptionMiddleware
         {
             _logger.LogError(ex,"Unhandled exception occurred");
 
-            context.Response.StatusCode = 500;
+            var statusCode = ex switch
+            {
+                ArgumentException => StatusCodes.Status400BadRequest,
+                KeyNotFoundException => StatusCodes.Status404NotFound,
+                _ => StatusCodes.Status500InternalServerError
+            };
+
+            context.Response.StatusCode = statusCode;
 
             await context.Response.WriteAsJsonAsync(
                 new
                 {
-                    Message = "Unexpected error occurred"
+                    Message = ex.Message,
+                    StatusCodes = statusCode
                 });
         }
     }
