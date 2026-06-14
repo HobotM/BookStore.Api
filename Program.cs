@@ -7,13 +7,11 @@ using BookStore.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .WriteTo.Console()
-    .WriteTo.File(
-        "logs/bookstore-.txt",
-        rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+builder.Host.UseSerilog((context, configuration) =>
+    {
+        configuration.ReadFrom.Configuration(
+            context.Configuration);
+    });
 
 builder.Host.UseSerilog();
 
