@@ -67,14 +67,7 @@ public sealed class BookService
 
     public void SimulateError()
     {
-        try
-        {
+        
             throw new InvalidOperationException("Simulated database error.");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while simulating database operation");
-            throw;
-        }
     }
 }

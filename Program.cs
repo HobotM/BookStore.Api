@@ -2,6 +2,8 @@ using BookStore.Api.Services;
 using Serilog;
 using Swashbuckle;
 using BookStore.Api.Repositories;
+using BookStore.Api.Middlewares;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

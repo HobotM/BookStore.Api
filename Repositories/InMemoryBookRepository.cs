@@ -20,27 +20,21 @@ public sealed class InMemoryBookRepository : IBookRepository
 
     public IReadOnlyCollection<Book> GetAll()
     {
-        // TODO:
-        // Zaloguj Information:
-        // "Loading all books from repository. Count: {BooksCount}"
+
         _logger.LogInformation("Loading all books from repository. Count: {BooksCount}", _books.Count);
         return _books;
     }
 
     public Book? GetById(int id)
     {
-        // TODO:
-        // Zaloguj Debug:
-        // "Searching book with id {BookId} in repository"
+
         _logger.LogDebug("Searching book with {BookId}", id);
         return _books.FirstOrDefault(x => x.Id == id);
     }
 
     public Book Add(Book book)
     {
-        // TODO:
-        // Zaloguj Information:
-        // "Adding book {BookId} to repository"
+
         _logger.LogInformation("Adding book {BookId} to repository", book.Id);
         _books.Add(book);
 
