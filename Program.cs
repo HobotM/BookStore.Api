@@ -1,8 +1,10 @@
 using BookStore.Api.Services;
 using Serilog;
-using Swashbuckle;
 using BookStore.Api.Repositories;
 using BookStore.Api.Middlewares;
+using BookStore.Api.Models;
+using System.Reflection;
+using BookStore.Api.Events;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,11 +19,27 @@ builder.Host.UseSerilog((context, configuration) =>
 
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
-
+builder.Services.AddSingleton<AuditSubscriber>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+var bookService = app.Services.GetRequiredService<BookService>();
+var auditSubscriber = app.Services.GetRequiredService<AuditSubscriber>();
+
+bookService.BookCreated += book =>
+{
+    Log.Information(
+        "EVENT: Book created. Id: {BookId}, Title: {BookTitle}",
+        book.Id,
+        book.Title);
+};
+
+bookService.BookCreated += auditSubscriber.onBookCreated;
+
+
+
 
 app.UseSerilogRequestLogging();
 app.UseMiddleware<CorrelationIdMiddleware>();

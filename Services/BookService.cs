@@ -8,6 +8,7 @@ public sealed class BookService
     private readonly ILogger<BookService> _logger;
     private readonly IBookRepository _bookRepository;
 
+    public event Action<Book>? BookCreated;
     public BookService(
         ILogger<BookService> logger,
         IBookRepository bookRepository)
@@ -67,6 +68,8 @@ public sealed class BookService
             createdBook.Id,
             createdBook.Title);
 
+            BookCreated?.Invoke(createdBook);
+
         return createdBook;
     }
 
@@ -75,4 +78,6 @@ public sealed class BookService
         
             throw new InvalidOperationException("Simulated database error.");
     }
+
+
 }
