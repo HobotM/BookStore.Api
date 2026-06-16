@@ -13,7 +13,7 @@ builder.Host.UseSerilog((context, configuration) =>
             context.Configuration);
     });
 
-builder.Host.UseSerilog();
+
 
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
@@ -24,6 +24,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 if (app.Environment.IsDevelopment())
 {
