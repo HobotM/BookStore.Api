@@ -4,6 +4,7 @@ using BookStore.Api.Repositories;
 using BookStore.Api.Middlewares;
 using BookStore.Api.Events;
 using BookStore.Api.EventHandlers;
+using Microsoft.ApplicationInsights;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,9 +93,17 @@ app.MapGet("/simulate-error", (BookService bookService) =>
 });
 
 
-app.MapPost("/books", async(CreateBookRequest request, BookService bookService) =>
+app.MapPost("/books", async(CreateBookRequest request, BookService bookService, TelemetryClient telemetryClient) =>
 {
     var book = await bookService.CreateAsync(request.Title, request.Author, request.Price);
+
+    telemetryClient.TrackEvent("BookCreated", new Dictionary<string, string>
+    {
+        ["BookId"] = book.Id.ToString(),
+        ["Title"] = book.Title,
+        ["Author"] = book.Author
+
+    });
 
     return Results.Created($"/books/{book.Id}", book);
 });
