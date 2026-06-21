@@ -10,6 +10,9 @@ obj/
 # VS Code
 .vscode/
 
+publish/
+
+
 # Rider / JetBrains
 .idea/
 

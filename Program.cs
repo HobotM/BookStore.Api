@@ -30,11 +30,39 @@ var app = builder.Build();
 app.UseSerilogRequestLogging();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
-if (app.Environment.IsDevelopment())
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+
+app.MapGet("/", () => Results.Ok("BookStore.Api is running from Azure - v2"));
+
+app.MapGet("/config", (IConfiguration configuration, IWebHostEnvironment environment) =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+   var welcomeMessage = configuration["MyApp:WelcomeMessage"]; 
+
+    return Results.Ok( new
+    {
+        Environment = environment.EnvironmentName,
+        WelcomeMessage = welcomeMessage 
+    });
+    
+});
+
+
+app.MapGet("/connection", (IConfiguration configuration) =>
+{
+   var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+   return Results.Ok(new
+   {
+        HasConnectionString = !string.IsNullOrWhiteSpace(connectionString),
+        ConnectionStringPreview = string.IsNullOrWhiteSpace(connectionString) ? null : connectionString[..Math.Min(connectionString.Length, 20)] + "..."
+   }); 
+
+});
+
+
 
 app.MapGet("/books", (BookService bookService) =>
 {
