@@ -18,10 +18,13 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddSingleton<BookService>();
 builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
 builder.Services.AddSingleton<AuditSubscriber>();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<BookCreatedAuditHandler>();
 builder.Services.AddSingleton<BookCreatedEmailHandler>();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddApplicationInsightsTelemetry();
+
 
 
 
