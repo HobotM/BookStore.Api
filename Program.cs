@@ -6,6 +6,8 @@ using BookStore.Api.Services;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Serilog;
 using System.Diagnostics;
+using BookStore.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,13 +17,19 @@ builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration);
 });
 
-builder.Services.AddSingleton<BookService>();
-builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
+builder.Services.AddScoped<BookService>();
+builder.Services.AddScoped<IBookRepository, EfBookRepository>();
 builder.Services.AddSingleton<AuditSubscriber>();
 builder.Services.AddSingleton<BookCreatedAuditHandler>();
 builder.Services.AddSingleton<BookCreatedEmailHandler>();
 builder.Services.AddSingleton<BlobStorageService>();
 
+builder.Services.AddDbContext<BookStoreDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    options.UseSqlServer(connectionString);
+});
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -47,6 +55,11 @@ if (!string.IsNullOrWhiteSpace(applicationInsightsConnectionString))
         });
 }
 
+
+
+
+
+
 var app = builder.Build();
 
 
@@ -58,6 +71,20 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapControllers();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 app.MapGet("/", () =>
 {

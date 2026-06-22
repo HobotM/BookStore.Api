@@ -4,9 +4,9 @@ namespace BookStore.Api.Repositories;
 
 public interface IBookRepository
 {
-    IReadOnlyCollection<Book> GetAll();
+    IReadOnlyList<Book> GetAll();
     Book? GetById(int id);
-    Book Add(Book book);
-    int GetNextId();
+    Task<Book> AddAsync(Book book);
+
     
 }
