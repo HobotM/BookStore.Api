@@ -24,27 +24,29 @@ public sealed class BookService
         _emailHandler = emailHandler;
     }
 
-    public IReadOnlyCollection<Book> GetAll()
+    public async Task<IReadOnlyList<Book>> GetAllAsync(
+        CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting all books");
 
-        return _bookRepository.GetAll();
+        return await _bookRepository.GetAllAsync(cancellationToken);
     }
 
-    public Book? GetById(int id)
+    public async Task<Book?> GetByIdAsync(
+        int id,
+        CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting book with id {BookId}", id);
 
-        var book = _bookRepository.GetById(id);
+        var book = await _bookRepository.GetByIdAsync(
+            id,
+            cancellationToken);
 
         if (book is null)
         {
             _logger.LogWarning(
                 "Book with id {BookId} was not found",
                 id);
-
-            throw new KeyNotFoundException(
-                $"Book with id {id} was not found.");
         }
 
         return book;
@@ -53,7 +55,8 @@ public sealed class BookService
     public async Task<Book> CreateAsync(
         string title,
         string author,
-        decimal price)
+        decimal price,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -89,7 +92,9 @@ public sealed class BookService
             Price = price
         };
 
-        var createdBook = await _bookRepository.AddAsync(book);
+        var createdBook = await _bookRepository.AddAsync(
+            book,
+            cancellationToken);
 
         var domainEvent = new BookCreatedEvent(
             createdBook.Id,

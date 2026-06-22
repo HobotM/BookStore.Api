@@ -17,12 +17,13 @@ public sealed class EfBookRepository : IBookRepository
         _logger = logger;
     }
 
-    public IReadOnlyList<Book> GetAll()
+    public async Task<IReadOnlyList<Book>> GetAllAsync(
+        CancellationToken cancellationToken)
     {
-        var books = _context.Books
+        var books = await _context.Books
             .AsNoTracking()
             .OrderBy(book => book.Id)
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         _logger.LogInformation(
             "Loaded all books from database. Count: {BooksCount}",
@@ -31,22 +32,28 @@ public sealed class EfBookRepository : IBookRepository
         return books;
     }
 
-    public Book? GetById(int id)
+    public async Task<Book?> GetByIdAsync(
+        int id,
+        CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Loading book from database. BookId: {BookId}",
             id);
 
-        return _context.Books
+        return await _context.Books
             .AsNoTracking()
-            .FirstOrDefault(book => book.Id == id);
+            .FirstOrDefaultAsync(
+                book => book.Id == id,
+                cancellationToken);
     }
 
-    public async Task<Book> AddAsync(Book book)
+    public async Task<Book> AddAsync(
+        Book book,
+        CancellationToken cancellationToken)
     {
         _context.Books.Add(book);
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation(
             "Book saved to database. BookId: {BookId}, Title: {Title}",

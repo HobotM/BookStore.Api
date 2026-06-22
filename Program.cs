@@ -56,10 +56,6 @@ if (!string.IsNullOrWhiteSpace(applicationInsightsConnectionString))
 }
 
 
-
-
-
-
 var app = builder.Build();
 
 
@@ -72,117 +68,11 @@ app.UseSwaggerUI();
 
 app.MapControllers();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 app.MapGet("/", () =>
 {
     return Results.Ok("BookStore.Api is running from Azure - v2");
 });
 
-app.MapGet("/config", (IConfiguration configuration, IWebHostEnvironment environment) =>
-{
-    var welcomeMessage = configuration["MyApp:WelcomeMessage"];
-
-    return Results.Ok(new
-    {
-        Environment = environment.EnvironmentName,
-        WelcomeMessage = welcomeMessage
-    });
-});
-
-app.MapGet("/connection", (IConfiguration configuration) =>
-{
-    var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-    return Results.Ok(new
-    {
-        HasConnectionString = !string.IsNullOrWhiteSpace(connectionString),
-        ConnectionStringPreview = string.IsNullOrWhiteSpace(connectionString)
-            ? null
-            : connectionString[..Math.Min(connectionString.Length, 20)] + "..."
-    });
-});
-
-app.MapGet("/books", (BookService bookService) =>
-{
-    var books = bookService.GetAll();
-
-    return Results.Ok(books);
-});
-
-app.MapGet("/books/{id:int}", (int id, BookService bookService) =>
-{
-    var book = bookService.GetById(id);
-
-    return book is null
-        ? Results.NotFound()
-        : Results.Ok(book);
-});
-
-app.MapGet("/simulate-error", (BookService bookService) =>
-{
-    bookService.SimulateError();
-
-    return Results.Ok();
-});
-
-app.MapPost("/books", async (
-    CreateBookRequest request,
-    BookService bookService,
-    ILogger<Program> logger) =>
-{
-    using var activity = bookStoreActivitySource.StartActivity("BookCreated");
-
-    var book = await bookService.CreateAsync(
-        request.Title,
-        request.Author,
-        request.Price);
-
-    activity?.SetTag("book.id", book.Id);
-    activity?.SetTag("book.title", book.Title);
-    activity?.SetTag("book.author", book.Author);
-
-    logger.LogInformation(
-        "Book created. BookId: {BookId}, Title: {Title}",
-        book.Id,
-        book.Title);
-
-    
-
-    return Results.Created($"/books/{book.Id}", book);
-});
-
-
-app.MapGet("/secret-test", (IConfiguration configuration) =>
-{
-    var apiKey = configuration["BookStore:ApiKey"];
-
-    return Results.Ok (new
-    {
-        HasApiKey = !string.IsNullOrWhiteSpace(apiKey),
-        ApiKeyPreview = string.IsNullOrWhiteSpace(apiKey) ? null : apiKey[..Math.Min(apiKey.Length, 5)]+ "..."
-    });
-
-
-});
-
 
 
 app.Run();
-
-public sealed record CreateBookRequest(
-    string Title,
-    string Author,
-    decimal Price);

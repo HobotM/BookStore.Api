@@ -4,9 +4,9 @@ namespace BookStore.Api.Repositories;
 
 public interface IBookRepository
 {
-    IReadOnlyList<Book> GetAll();
-    Book? GetById(int id);
-    Task<Book> AddAsync(Book book);
+    Task<IReadOnlyList<Book>> GetAllAsync(CancellationToken cancellationToken);
 
-    
+    Task<Book?> GetByIdAsync(int id, CancellationToken cancellationToken);
+
+    Task<Book> AddAsync(Book book, CancellationToken cancellationToken);
 }
