@@ -20,7 +20,10 @@ builder.Services.AddSingleton<IBookRepository, InMemoryBookRepository>();
 builder.Services.AddSingleton<AuditSubscriber>();
 builder.Services.AddSingleton<BookCreatedAuditHandler>();
 builder.Services.AddSingleton<BookCreatedEmailHandler>();
+builder.Services.AddSingleton<BlobStorageService>();
 
+
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -46,12 +49,15 @@ if (!string.IsNullOrWhiteSpace(applicationInsightsConnectionString))
 
 var app = builder.Build();
 
+
 app.UseSerilogRequestLogging();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapControllers();
 
 app.MapGet("/", () =>
 {
@@ -144,7 +150,6 @@ app.MapGet("/secret-test", (IConfiguration configuration) =>
 
 
 });
-
 
 
 
