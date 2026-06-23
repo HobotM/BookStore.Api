@@ -30,7 +30,32 @@ public sealed class BookStoreDbContext : DbContext
 
             entity.Property(book => book.Price)
                 .HasColumnType("decimal(18,2)");
+
         });
+
+        modelBuilder.Entity<BookAudit>(entity =>
+            {
+                entity.ToTable("BookAudits");
+
+                entity.HasKey(audit => audit.Id);
+
+                entity.Property(audit => audit.BookId)
+                    .IsRequired();
+
+                entity.Property(audit => audit.EventType)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(audit => audit.CreatedAtUtc)
+                    .IsRequired();
+
+                entity.Property(audit => audit.MessageId)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.HasIndex(audit => audit.MessageId)
+                    .IsUnique();
+            });
     }
     
 
