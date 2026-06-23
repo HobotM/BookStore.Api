@@ -11,7 +11,7 @@ public sealed class BookStoreDbContext : DbContext
     }
 
     public DbSet<Book> Books => Set<Book>();
-
+    public DbSet<BookAudit> BookAudits => Set<BookAudit>();
      protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Book>(entity =>
@@ -32,6 +32,7 @@ public sealed class BookStoreDbContext : DbContext
                 .HasColumnType("decimal(18,2)");
         });
     }
+    
 
 
 

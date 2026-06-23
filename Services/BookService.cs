@@ -1,6 +1,6 @@
-using BookStore.Api.EventHandlers;
 using BookStore.Api.Events;
 using BookStore.Api.Models;
+using BookStore.Api.Publishers;
 using BookStore.Api.Repositories;
 
 namespace BookStore.Api.Services;
@@ -9,19 +9,16 @@ public sealed class BookService
 {
     private readonly ILogger<BookService> _logger;
     private readonly IBookRepository _bookRepository;
-    private readonly BookCreatedAuditHandler _auditHandler;
-    private readonly BookCreatedEmailHandler _emailHandler;
+    private readonly IBookEventPublisher _bookEventPublisher;
 
     public BookService(
         ILogger<BookService> logger,
         IBookRepository bookRepository,
-        BookCreatedAuditHandler auditHandler,
-        BookCreatedEmailHandler emailHandler)
+        IBookEventPublisher bookEventPublisher)
     {
         _logger = logger;
         _bookRepository = bookRepository;
-        _auditHandler = auditHandler;
-        _emailHandler = emailHandler;
+        _bookEventPublisher = bookEventPublisher;
     }
 
     public async Task<IReadOnlyList<Book>> GetAllAsync(
@@ -103,11 +100,12 @@ public sealed class BookService
             createdBook.Price,
             DateTime.UtcNow);
 
-        await _auditHandler.HandleAsync(domainEvent);
-        await _emailHandler.HandleAsync(domainEvent);
+        await _bookEventPublisher.PublishBookCreatedAsync(
+            domainEvent,
+            cancellationToken);
 
         _logger.LogInformation(
-            "Book created successfully. BookId: {BookId}, Title: {Title}",
+            "Book created successfully and event published. BookId: {BookId}, Title: {Title}",
             createdBook.Id,
             createdBook.Title);
 

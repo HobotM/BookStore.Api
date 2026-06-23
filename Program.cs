@@ -8,7 +8,7 @@ using Serilog;
 using System.Diagnostics;
 using BookStore.Api.Data;
 using Microsoft.EntityFrameworkCore;
-
+using BookStore.Api.Publishers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +30,7 @@ builder.Services.AddDbContext<BookStoreDbContext>(options =>
 
     options.UseSqlServer(connectionString);
 });
-
+builder.Services.AddSingleton<IBookEventPublisher, AzureServiceBusBookEventPublisher>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

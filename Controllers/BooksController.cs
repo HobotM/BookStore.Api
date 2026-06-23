@@ -1,4 +1,5 @@
 using BookStore.Api.Services;
+using BookStore.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -54,7 +55,7 @@ public sealed class BooksController : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> CreateAsync(
-        CreateBookRequest request,
+        CreateBookRequestDto request,
         CancellationToken cancellationToken)
     {
         using var activity = ActivitySource.StartActivity("BookCreated");
@@ -75,9 +76,4 @@ public sealed class BooksController : ControllerBase
 
         return Created($"/books/{book.Id}", book);
     }
-}
-
-public sealed record CreateBookRequest(
-    string Title,
-    string Author,
-    decimal Price);
+};
