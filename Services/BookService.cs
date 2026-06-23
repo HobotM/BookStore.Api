@@ -2,6 +2,9 @@ using BookStore.Api.Events;
 using BookStore.Api.Models;
 using BookStore.Api.Publishers;
 using BookStore.Api.Repositories;
+using System.Text.Json;
+using BookStore.Api.Data;
+
 
 namespace BookStore.Api.Services;
 
@@ -10,15 +13,18 @@ public sealed class BookService
     private readonly ILogger<BookService> _logger;
     private readonly IBookRepository _bookRepository;
     private readonly IBookEventPublisher _bookEventPublisher;
+    private readonly BookStoreDbContext _dbContext;
 
     public BookService(
         ILogger<BookService> logger,
         IBookRepository bookRepository,
-        IBookEventPublisher bookEventPublisher)
+        IBookEventPublisher bookEventPublisher,
+        BookStoreDbContext dbContext)
     {
         _logger = logger;
         _bookRepository = bookRepository;
         _bookEventPublisher = bookEventPublisher;
+        _dbContext = dbContext;
     }
 
     public async Task<IReadOnlyList<Book>> GetAllAsync(
@@ -89,27 +95,34 @@ public sealed class BookService
             Price = price
         };
 
-        var createdBook = await _bookRepository.AddAsync(
-            book,
-            cancellationToken);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await _bookRepository.AddAsync(book, cancellationToken);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
 
         var domainEvent = new BookCreatedEvent(
-            createdBook.Id,
-            createdBook.Title,
-            createdBook.Author,
-            createdBook.Price,
+            book.Id,
+            book.Title,
+            book.Author,
+            book.Price,
             DateTime.UtcNow);
 
-        await _bookEventPublisher.PublishBookCreatedAsync(
-            domainEvent,
-            cancellationToken);
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = nameof(BookCreatedEvent),
+            Content = JsonSerializer.Serialize(domainEvent),
+            OccurredAtUtc = domainEvent.OccurredAtUtc
+        };
+        await _dbContext.OutboxMessages.AddAsync(outboxMessage, cancellationToken);
 
-        _logger.LogInformation(
-            "Book created successfully and event published. BookId: {BookId}, Title: {Title}",
-            createdBook.Id,
-            createdBook.Title);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return createdBook;
+        await transaction.CommitAsync(cancellationToken);
+
+        return book;
     }
 
     public void SimulateError()

@@ -12,6 +12,7 @@ public sealed class BookStoreDbContext : DbContext
 
     public DbSet<Book> Books => Set<Book>();
     public DbSet<BookAudit> BookAudits => Set<BookAudit>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
      protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Book>(entity =>
@@ -55,6 +56,30 @@ public sealed class BookStoreDbContext : DbContext
 
                 entity.HasIndex(audit => audit.MessageId)
                     .IsUnique();
+            });
+
+            modelBuilder.Entity<OutboxMessage>(entity =>
+            {
+                entity.ToTable("OutboxMessages");
+
+                entity.HasKey(message => message.Id);
+
+                entity.Property(message => message.Type)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(message => message.Content)
+                    .IsRequired();
+
+                entity.Property(message => message.OccurredAtUtc)
+                    .IsRequired();
+
+                entity.Property(message => message.ProcessedAtUtc);
+
+                entity.Property(message => message.Error)
+                    .HasMaxLength(2000);
+
+                entity.HasIndex(message => message.ProcessedAtUtc);
             });
     }
     

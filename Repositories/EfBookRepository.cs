@@ -47,19 +47,15 @@ public sealed class EfBookRepository : IBookRepository
                 cancellationToken);
     }
 
-    public async Task<Book> AddAsync(
+    public async Task AddAsync(
         Book book,
         CancellationToken cancellationToken)
     {
-        _context.Books.Add(book);
+        
+        await _context.Books.AddAsync(book, cancellationToken);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Book saved to dbContext. Title: {Title}",book.Title);
 
-        _logger.LogInformation(
-            "Book saved to database. BookId: {BookId}, Title: {Title}",
-            book.Id,
-            book.Title);
-
-        return book;
+         
     }
 }

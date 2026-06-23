@@ -8,5 +8,5 @@ public interface IBookRepository
 
     Task<Book?> GetByIdAsync(int id, CancellationToken cancellationToken);
 
-    Task<Book> AddAsync(Book book, CancellationToken cancellationToken);
+    Task AddAsync(Book book, CancellationToken cancellationToken);
 }
